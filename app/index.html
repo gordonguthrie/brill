@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Brill</title>
+    <link rel="stylesheet" href="../node_modules/semantic/dist/semantic.min.css">
+    <script>
+      const jQuery = require('jquery')
+      const $ = jQuery
+      require('../node_modules/semantic/dist/semantic.min.js')
+    </script>
+  </head>
+  <body>
+    
+    <!-- this is the main page -->
+    <div class="ui grid">
+      <div class="four wide column">
+	<div class="ui vertical fluid tabular menu">
+	  <a class="active item" data-tab="Settings">Settings</a>
+	  <a class="item" data-tab="Song">Song</a>
+	  <a class="item" data-tab="Timing">Timing & Structure</a>
+	  <a class="item" data-tab="Instruments">Instruments</a>
+	</div>
+      </div>
+      <div class="twelve wide stretched column">
+	<div class="ui segment">
+	  <div class="ui tab active" data-tab="Settings">
+	    settings
+	  </div>
+	  <div class="ui tab" data-tab="Song">
+	    song
+	  </div>
+	  <div class="ui tab" data-tab="Timing">
+	    timing
+	  </div>
+	  <div class="ui tab" data-tab="Instruments">
+	    instruments
+	  </div>
+	</div>
+      </div>
+    </div>
+
+    <!-- the open file dialog box -->
+    
+    <div class="ui basic modal brillopen">
+      <div class="ui icon header">
+	<button class="ui primary button brillnew">
+	  New Song
+	</button>
+	<button class="ui button brillopen">
+	  Open Songs
+	</button>
+      </div>
+      
+    </div>
+    <!-- All of the Node.js APIs are available in this renderer process. -->
+
+    <script>
+      // You can also require other files to run in this process
+      require('./renderer.js')
+   </script>
+  </body>
+</html>
