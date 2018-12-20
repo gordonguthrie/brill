@@ -2,18 +2,41 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-var remote = require('electron').remote; 
-var app = require('electron').remote.app;
-var dialog = require('electron').remote.dialog;
-var fs = require('fs');
-var song = require('brill-song');
+const remote = require('electron').remote; 
+const app = require('electron').remote.app;
+const dialog = require('electron').remote.dialog;
+const fs = require('fs');
+const song = require('brill-song');
+const settings = require('electron-settings');
 
+// global variables
 var currentsong;
+var is_song_open = false;
 
-// open the 'Open Song' dialog box
-$('.ui.modal.brillopen').modal('show');
+//
+// internal functions
+//
+var init = function () {
+    if (typeof(settings.get('songwriters')) !== undefined) {
+	console.log("songwriters is " + settings.get('songwriters'));
+	$("#brill-songwriters").val(settings.get('songwriters'));
+    }
+};
 
-$('.ui.button.brillopen').click(function () {
+var render = function() {
+    console.log(currentsong);
+    currentsong.dump();
+}
+
+//
+// controls bindings
+//
+$('.tabular.menu .item').tab();
+
+//
+// bind buttons and stuff
+//
+$('.ui.button.brill-open').click(function () {
     var home = app.getPath('home');
     dialog.showOpenDialog({properties: ['openDirectory', 'CreateDirectory'],
 			   defaultPath: home},
@@ -28,28 +51,40 @@ $('.ui.button.brillopen').click(function () {
 			  }
 			  )});
 
-$('.ui.button.brillnew').click(function () {
+$('.ui.button.brill-new').click(function () {
     var home = app.getPath('home');
     dialog.showSaveDialog({properties: ['openDirectory', 'CreateDirectory'],
 			   defaultPath: home},
 			  function (fileName) {
 			      if(fileName === undefined){
-				  // console.log("No file selected");
+				  console.log("No file selected");
 			      } else {
 				  var selectedsong = fileName;
 				  fs.mkdir(selectedsong, function(err){
 				      if (err) {
 					  return console.error(err);
 				      }
+				      currentsong = song.open(selectedsong)
 				      render();
 				      $('.ui.modal.brillopen').modal('hide');
-				      currentsong = song.open(selectedsong)
+
 });
 			      }
 			  }
 			  )});
 
+$("#brill-save-songwriters").click(function () {
+    console.log("save button clicked");
+    if (is_song_open) {
+	console.log(song);
+	song.mark_dirty("songwriters");
+    }
+    var songwriters = $("#brill-songwriters").val();
+    console.log("songwriters is " + songwriters);
+    settings.set('songwriters', songwriters);
+});
 
-var render = function() {
-    currentsong.dump();
-}
+//
+// now run init
+//
+init();

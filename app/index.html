@@ -11,7 +11,7 @@
     </script>
   </head>
   <body>
-    
+    <div class="ui divider"></div>
     <!-- this is the main page -->
     <div class="ui grid">
       <div class="four wide column">
@@ -25,10 +25,21 @@
       <div class="twelve wide stretched column">
 	<div class="ui segment">
 	  <div class="ui tab active" data-tab="Settings">
-	    settings
+	    <div class="ui input">
+	      <input id="brill-songwriters" type="text" placeholder="songwriters/band">
+	      <button id="brill-save-songwriters" class="ui primary button">
+		Save
+	      </button>
+	    </div>
 	  </div>
 	  <div class="ui tab" data-tab="Song">
-	    song
+      <div class="ui icon header">
+	<button class="ui primary button brill-new">
+	  New Song
+	</button>
+	<button class="ui button brill-open">
+	  Open Songs
+	</button>
 	  </div>
 	  <div class="ui tab" data-tab="Timing">
 	    timing
@@ -41,17 +52,7 @@
     </div>
 
     <!-- the open file dialog box -->
-    
-    <div class="ui basic modal brillopen">
-      <div class="ui icon header">
-	<button class="ui primary button brillnew">
-	  New Song
-	</button>
-	<button class="ui button brillopen">
-	  Open Songs
-	</button>
-      </div>
-      
+          
     </div>
     <!-- All of the Node.js APIs are available in this renderer process. -->
 
