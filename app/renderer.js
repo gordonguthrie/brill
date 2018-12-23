@@ -17,25 +17,49 @@ var is_song_open = false;
 // internal functions
 //
 var init = function () {
-    if (typeof(settings.get('songwriters')) !== undefined) {
-	console.log("songwriters is " + settings.get('songwriters'));
+    if (settings.has('songwriters')) {
 	$("#brill-songwriters").val(settings.get('songwriters'));
     }
 };
 
-var render = function() {
-    console.log(currentsong);
+var get_songwriters = function () {
+    if (settings.has('songwriters')) {
+	return settings.get('songwriters');
+    } else {
+	return "";
+    }
+}
+
+var update_data = function(val, route) {
+    var routes = route.split(":");  
+    currentsong.set(val, routes[0], routes[1]);
     currentsong.dump();
+}
+    
+var render = function() {
+    $(".brill-title").val(currentsong.get("title", "title"));
+    $(".brill-songwriters").val(currentsong.get("songwriters", "songwriters"));
+}
+
+var show_song = function () {
+    $('.brill-hidden').transition('fade');
 }
 
 //
 // controls bindings
 //
+
+// semantic ui tabs
 $('.tabular.menu .item').tab();
 
-//
+// bind data fields to update the song
+$("input[data-brill]").change(function (e) {
+    var val = $(e.target).val();
+    var route = $(e.target).attr("data-brill");
+    update_data(val, route);
+});
+
 // bind buttons and stuff
-//
 $('.ui.button.brill-open').click(function () {
     var home = app.getPath('home');
     dialog.showOpenDialog({properties: ['openDirectory', 'CreateDirectory'],
@@ -43,8 +67,8 @@ $('.ui.button.brill-open').click(function () {
 			  function (fileName) {
 			      if(fileName === undefined){
 			      } else {
-				  currentsong = song.open(fileName);
-				  console.log(currentsong);
+				  currentsong = song.open(fileName[0], get_songwriters());
+				  show_song();
 				  render();
 				  $('.ui.modal.brillopen').modal('hide');
 			      }
@@ -64,8 +88,9 @@ $('.ui.button.brill-new').click(function () {
 				      if (err) {
 					  return console.error(err);
 				      }
-				      currentsong = song.open(selectedsong)
-				      render();
+				      currentsong = song.open(selectedsong, get_songwriters());
+				      show_song();
+				      render(); 
 				      $('.ui.modal.brillopen').modal('hide');
 
 });
@@ -74,13 +99,7 @@ $('.ui.button.brill-new').click(function () {
 			  )});
 
 $("#brill-save-songwriters").click(function () {
-    console.log("save button clicked");
-    if (is_song_open) {
-	console.log(song);
-	song.mark_dirty("songwriters");
-    }
     var songwriters = $("#brill-songwriters").val();
-    console.log("songwriters is " + songwriters);
     settings.set('songwriters', songwriters);
 });
 
@@ -88,3 +107,4 @@ $("#brill-save-songwriters").click(function () {
 // now run init
 //
 init();
+

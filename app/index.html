@@ -16,36 +16,50 @@
     <div class="ui grid">
       <div class="four wide column">
 	<div class="ui vertical fluid tabular menu">
-	  <a class="active item" data-tab="Settings">Settings</a>
-	  <a class="item" data-tab="Song">Song</a>
+	  <a class="active item" data-tab="Song">Song</a>
 	  <a class="item" data-tab="Timing">Timing & Structure</a>
 	  <a class="item" data-tab="Instruments">Instruments</a>
+	  <a class="item" data-tab="Settings">Settings</a>
 	</div>
       </div>
       <div class="twelve wide stretched column">
 	<div class="ui segment">
-	  <div class="ui tab active" data-tab="Settings">
-	    <div class="ui input">
-	      <input id="brill-songwriters" type="text" placeholder="songwriters/band">
-	      <button id="brill-save-songwriters" class="ui primary button">
-		Save
+	  <div class="ui active tab" data-tab="Song">
+	    <div class="ui icon header">
+	      <button class="ui primary button brill-new">
+		New Song
+	      </button>
+	      <button class="ui button brill-open">
+		Open Song
 	      </button>
 	    </div>
-	  </div>
-	  <div class="ui tab" data-tab="Song">
-      <div class="ui icon header">
-	<button class="ui primary button brill-new">
-	  New Song
-	</button>
-	<button class="ui button brill-open">
-	  Open Songs
-	</button>
+	    <div class="ui divider"></div>
+	    <div class="brill-hidden ui transition hidden">
+	      <div class="ui fluid labeled input">
+		<input class="brill-title" data-brill="title:title" type="text" placeholder="current song">
+		<div class="ui tag label">Song</div>
+	      </div>
+	      <p></p>
+	      <div class="ui fluid labeled input">
+		<input class="brill-songwriters" data-brill="songwriters:songwriters" type="text" placeholder="songwriters">
+		<div class="ui tag label">Songwriters</div>
+	      </div>
+	    </div>
 	  </div>
 	  <div class="ui tab" data-tab="Timing">
 	    timing
 	  </div>
 	  <div class="ui tab" data-tab="Instruments">
 	    instruments
+	  </div>
+	  <div class="ui tab" data-tab="Settings">
+	    <div class="ui labeled input">
+	      <div class="ui label">Songwriters</div>
+	      <input id="brill-songwriters" type="text" placeholder="songwriters/band">
+	      <button id="brill-save-songwriters" class="ui primary button">
+		Save
+	      </button>
+	    </div>
 	  </div>
 	</div>
       </div>
