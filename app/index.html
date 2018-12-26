@@ -16,15 +16,15 @@
     <div class="ui grid">
       <div class="four wide column">
 	<div class="ui vertical fluid tabular menu">
-	  <a class="active item" data-tab="Song">Song</a>
-	  <a class="item" data-tab="Timing">Timing & Structure</a>
+	  <a class="item" data-tab="Song">Song</a>
+	  <a class="active item" data-tab="Timing">Timing</a>
 	  <a class="item" data-tab="Instruments">Instruments</a>
 	  <a class="item" data-tab="Settings">Settings</a>
 	</div>
       </div>
       <div class="twelve wide stretched column">
 	<div class="ui segment">
-	  <div class="ui active tab" data-tab="Song">
+	  <div class="ui tab" data-tab="Song">
 	    <div class="ui icon header">
 	      <button class="ui primary button brill-new">
 		New Song
@@ -35,32 +35,51 @@
 	    </div>
 	    <div class="ui divider"></div>
 	    <div class="brill-hidden ui transition hidden">
-	      <div class="ui fluid labeled input">
-		<input class="brill-title" data-brill="title:title" type="text" placeholder="current song">
-		<div class="ui tag label">Song</div>
-	      </div>
-	      <p></p>
-	      <div class="ui fluid labeled input">
-		<input class="brill-songwriters" data-brill="songwriters:songwriters" type="text" placeholder="songwriters">
-		<div class="ui tag label">Songwriters</div>
+	      <div class="ui form">
+		<div class="field">
+		  <label>Song</label>
+		  <input class="brill-title" data-route="title:title" data-type="text" type="text" placeholder="current song">
+		</div>
+
+		<div class="field">
+		  <label>Songwriters</label>
+		  <input class="brill-songwriters" data-route="songwriters:songwriters" data-type="text" type="text" placeholder="songwriters">
+		</div>
 	      </div>
 	    </div>
 	  </div>
-	  <div class="ui tab" data-tab="Timing">
-	    timing
+	  <div class="ui active tab" data-tab="Timing">
+	    <div class="brill-hidden ui transition hidden">
+	      <div class="ui form">
+		<div class="field">
+		  <label>Beats Per Minute</label>
+		  <input class="brill-bpm" data-route="timing:bpm" data-type="number" type="text" placeholder="BPM">
+		</div>
+		<div class="field">
+		  <label>Beats to the bar</label>
+		  <input class="brill-beats_to_the_bar" data-route="timing:beats_to_the_bar" data-type="numbers" type="text" placeholder="beats to the bar">
+		</div>
+	      </div>
+	    </div>
 	  </div>
 	  <div class="ui tab" data-tab="Instruments">
 	    instruments
 	  </div>
 	  <div class="ui tab" data-tab="Settings">
-	    <div class="ui labeled input">
-	      <div class="ui label">Songwriters</div>
-	      <input id="brill-songwriters" type="text" placeholder="songwriters/band">
-	      <button id="brill-save-songwriters" class="ui primary button">
-		Save
-	      </button>
+	    <div class="ui form">
+	      <div class="field">
+		<label>Songwriters</label>
+	      <input id="brill-songwriters-setting" data-type="string" data-settings="songwriters" type="text" placeholder="songwriters/band">
+	      </div>
+	      <div class="field">
+		<label>Compile On Update</label>
+	      <input id="brill-compile-setting" data-type="boolean" data-settings="compile_on_update" type="checkbox" placeholder="compile on update">
+	      </div>
 	    </div>
 	  </div>
+	</div>
+	<div class="brill-error-msg ui hidden negative message">
+	  <p class="brill-error">Error</p>
 	</div>
       </div>
     </div>

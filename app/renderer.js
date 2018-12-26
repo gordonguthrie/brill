@@ -18,89 +18,160 @@ var is_song_open = false;
 //
 var init = function () {
     if (settings.has('songwriters')) {
-	$("#brill-songwriters").val(settings.get('songwriters'));
+	$("#brill-songwriters-setting").val(settings.get('songwriters'));
+    }
+    if (settings.has('compile_on_update')) {
+	var is_checked = settings.get('compile_on_update');
+	$("#brill-compile-setting").prop('checked', is_checked);
+    } else {
+	$("#brill-compile-setting").prop('checked', true);
     }
 };
 
-var get_songwriters = function () {
+var get_songwriters_from_settings = function () {
     if (settings.has('songwriters')) {
 	return settings.get('songwriters');
     } else {
 	return "";
     }
-}
+};
+
+var get_value = function(route) {
+    var routes = route.split(":");
+    return currentsong.get(routes[0], routes[1]);
+};
 
 var update_data = function(val, route) {
     var routes = route.split(":");  
     currentsong.set(val, routes[0], routes[1]);
-    currentsong.dump();
-}
+    maybe_compile();
+};
     
 var render = function() {
-    $(".brill-title").val(currentsong.get("title", "title"));
-    $(".brill-songwriters").val(currentsong.get("songwriters", "songwriters"));
-}
+    var values = $("input[data-route]");
+    values.each(function (d) {
+	var route = $(values[d]).attr("data-route");
+	$(values[d]).val(get_value(route));
+    });
+};
+
+var maybe_compile = function () {
+    console.log("maybe compiling");
+    if ($("#brill-compile-setting").is(":checked")) {
+	currentsong.compile();
+    };
+};
 
 var show_song = function () {
     $('.brill-hidden').transition('fade');
-}
+};
+
+var is_type_valid = function(val, type) {
+    if (type === "number") {
+	if (parseInt(val, 10)) {
+	    return true
+	} else {
+	    return false
+	};
+    } else {
+	return true;
+    }
+};
+
+var get_fieldname = function(classname) {
+    console.log("classname is " + classname);
+    var segs = classname.split("-");
+    console.log("segs is" + segs);
+    return segs[1];
+};
+
+var on_change = function (e) {
+    var val = $(e.target).val();
+    var type = $(e.target).attr("data-type");
+    if (is_type_valid(val, type)) {
+	var route = $(e.target).attr("data-route");
+	$(".brill-error-msg").removeClass("visible");
+	$(".brill-error-msg").addClass("hidden");
+	update_data(val, route);
+    } else {
+	var fieldname = get_fieldname($(e.target).attr("class"));
+	var msg = "Field " + fieldname + " has value " + val +
+	    " which is not of type " + type;
+	$(".brill-error").text(msg);
+	$(".brill-error-msg").removeClass("hidden");
+	$(".brill-error-msg").addClass("visible");	
+    }
+};
+
+/*var on_select_change = function(value, text, e) {
+    console.log("value is " + value);
+    console.log("text is " + text);
+    console.log(e);
+}*/
 
 //
-// controls bindings
+// bindings semantic ui controls
 //
 
 // semantic ui tabs
 $('.tabular.menu .item').tab();
 
+// semantic ui dropdowns
+//$(".brill-time-signature").dropdown('setting', 'onChange', on_select_change);
+
 // bind data fields to update the song
-$("input[data-brill]").change(function (e) {
-    var val = $(e.target).val();
-    var route = $(e.target).attr("data-brill");
-    update_data(val, route);
-});
+$("input[data-route]").change(on_change);
 
 // bind buttons and stuff
 $('.ui.button.brill-open').click(function () {
     var home = app.getPath('home');
-    dialog.showOpenDialog({properties: ['openDirectory', 'CreateDirectory'],
-			   defaultPath: home},
-			  function (fileName) {
-			      if(fileName === undefined){
-			      } else {
-				  currentsong = song.open(fileName[0], get_songwriters());
-				  show_song();
-				  render();
-				  $('.ui.modal.brillopen').modal('hide');
-			      }
-			  }
-			  )});
-
+    var openFn = function (fileName) {
+	if(fileName !== undefined){
+	    var writers = get_songwriters_from_settings();
+	    currentsong = song.open(fileName[0], writers);
+	    show_song();
+	    render();
+	    $('.ui.modal.brillopen').modal('hide');
+	}
+    };
+    var properties = {properties: ['openDirectory', 'CreateDirectory'],
+		      defaultPath: home};
+    dialog.showOpenDialog(properties, openFn);
+});
+    
 $('.ui.button.brill-new').click(function () {
     var home = app.getPath('home');
-    dialog.showSaveDialog({properties: ['openDirectory', 'CreateDirectory'],
-			   defaultPath: home},
-			  function (fileName) {
-			      if(fileName === undefined){
-				  console.log("No file selected");
-			      } else {
-				  var selectedsong = fileName;
-				  fs.mkdir(selectedsong, function(err){
-				      if (err) {
-					  return console.error(err);
-				      }
-				      currentsong = song.open(selectedsong, get_songwriters());
-				      show_song();
-				      render(); 
-				      $('.ui.modal.brillopen').modal('hide');
-
+    var openFn = function (fileName) {
+	if(fileName !== undefined){
+	    var selectedsong = fileName;
+	    fs.mkdir(selectedsong, function(err){
+		if (err) {
+		    return console.error(err);
+		}
+		var writers = get_songwriters_from_settings();
+		currentsong = song.open(selectedsong, writers);
+		show_song();
+		render(); 
+		$('.ui.modal.brillopen').modal('hide');		
+	    });
+	}
+    };
+    var properties = {properties: ['openDirectory', 'CreateDirectory'],
+		      defaultPath: home};
+    dialog.showSaveDialog(properties, openFn);
 });
-			      }
-			  }
-			  )});
 
-$("#brill-save-songwriters").click(function () {
-    var songwriters = $("#brill-songwriters").val();
-    settings.set('songwriters', songwriters);
+$("input[data-settings").change(function (e) {
+    var type = $(e.target).attr("data-type");
+    var val;
+    if (type === "boolean") {
+	val = $(e.target).is(":checked");
+    } else {
+	val = $(e.target).val();
+    };
+    var setting = $(e.target).attr("data-settings");
+
+    settings.set(setting, val);
 });
 
 //
@@ -108,3 +179,6 @@ $("#brill-save-songwriters").click(function () {
 //
 init();
 
+currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
+show_song();
+render();
