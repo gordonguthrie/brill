@@ -18,14 +18,23 @@ var is_song_open = false;
 //
 var init = function () {
     if (settings.has('songwriters')) {
-	$("#brill-songwriters-setting").val(settings.get('songwriters'));
-    }
+	var songwriters = settings.get('songwriters');
+	$("#brill-songwriters-setting").val(songwriters);
+    };
+    if (settings.has('songs_directory')) {
+	var songs_dir = settings.get('songs_directory');
+	$("#brill-songs-directory-setting").val(songs_dir);
+    };
+    if (settings.has('instruments_directory')) {
+	var instruments_dir = settings.get('instruments_directory');
+	$("#brill-instruments-directory-setting").val(instruments_dir);
+    };
     if (settings.has('compile_on_update')) {
 	var is_checked = settings.get('compile_on_update');
 	$("#brill-compile-setting").prop('checked', is_checked);
     } else {
 	$("#brill-compile-setting").prop('checked', true);
-    }
+    };
 };
 
 var get_songwriters_from_settings = function () {
@@ -33,6 +42,15 @@ var get_songwriters_from_settings = function () {
 	return settings.get('songwriters');
     } else {
 	return "";
+    }
+};
+
+var get_songs_dir_from_settings = function () {
+    if (settings.has('songs_directory')) {
+	return settings.get('songs_directory');
+    } else {
+	var home = app.getPath('home');
+	return home;
     }
 };
 
@@ -124,7 +142,6 @@ $("input[data-route]").change(on_change);
 
 // bind buttons and stuff
 $('.ui.button.brill-open').click(function () {
-    var home = app.getPath('home');
     var openFn = function (fileName) {
 	if(fileName !== undefined){
 	    var writers = get_songwriters_from_settings();
@@ -134,8 +151,10 @@ $('.ui.button.brill-open').click(function () {
 	    $('.ui.modal.brillopen').modal('hide');
 	}
     };
+    var songs_dir = get_songs_dir_from_settings();
+    console.log("songs dir is " + songs_dir);
     var properties = {properties: ['openDirectory', 'CreateDirectory'],
-		      defaultPath: home};
+		      defaultPath: songs_dir};
     dialog.showOpenDialog(properties, openFn);
 });
     
@@ -156,8 +175,10 @@ $('.ui.button.brill-new').click(function () {
 	    });
 	}
     };
+    var songs_dir = get_songs_dir_from_settings();
+    console.log("songs dir is " + songs_dir);
     var properties = {properties: ['openDirectory', 'CreateDirectory'],
-		      defaultPath: home};
+		      defaultPath: songs_dir};
     dialog.showSaveDialog(properties, openFn);
 });
 
