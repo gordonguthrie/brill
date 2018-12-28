@@ -63,6 +63,7 @@ var update_data = function(val, route) {
     var routes = route.split(":");  
     currentsong.set(val, routes[0], routes[1]);
     maybe_compile();
+    render();
 };
     
 var render = function() {
@@ -71,6 +72,15 @@ var render = function() {
 	var route = $(values[d]).attr("data-route");
 	$(values[d]).val(get_value(route));
     });
+    // progressively show stuff that has prerequisites to work
+    if ($(".brill-beats_to_the_bar").val() !== "") {
+	$("[data-hidden='beats_to_the_bar']").transition('fade');
+	render_swing();
+    };
+};
+
+var render_swing = function () {
+    console.log("rendering swing");
 };
 
 var maybe_compile = function () {
@@ -80,8 +90,11 @@ var maybe_compile = function () {
     };
 };
 
+var show_hidden = function () {
+};
+
 var show_song = function () {
-    $('.brill-hidden').transition('fade');
+    $("[data-hidden='song']").transition('fade');
 };
 
 var is_type_valid = function(val, type) {
@@ -203,3 +216,4 @@ init();
 currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
 show_song();
 render();
+
