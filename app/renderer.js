@@ -17,7 +17,7 @@ var is_song_open = false;
 //
 // internal functions
 //
-var init = function () {
+var init_settings = function () {
     if (settings.has('songwriters')) {
 	var songwriters = settings.get('songwriters');
 	$("#brill-songwriters-setting").val(songwriters);
@@ -87,11 +87,8 @@ var update_data = function(val, route) {
 };
 
 var render = function() {
-    var values = $("input[data-route]");
-    values.each(function (d) {
-	var route = $(values[d]).attr("data-route");
-	$(values[d]).val(get_value(route));
-    });
+    read_data_and_render();
+    bind_fields_for_update();
     // progressively show stuff that has prerequisites to work
     if ($(".brill-beats_to_the_bar").val() !== "") {
 	$("[data-hidden='beats_to_the_bar']").transition('fade');
@@ -99,10 +96,37 @@ var render = function() {
     };
 };
 
+var read_data_and_render = function () {
+    var values = $("input[data-route]");
+    values.each(function (d) {
+	var route = $(values[d]).attr("data-route");
+	$(values[d]).val(get_value(route));
+    });
+};
+
+var bind_fields_for_update = function () {
+    // bind data fields to update the song
+    $("input[data-route]").change(on_change);
+
+    $("input[data-settings").change(function (e) {
+	var type = $(e.target).attr("data-type");
+	var val;
+	if (type === "boolean") {
+	    val = $(e.target).is(":checked");
+	} else {
+	    val = $(e.target).val();
+	};
+	var setting = $(e.target).attr("data-settings");
+
+	settings.set(setting, val);
+    });
+};
+
 var render_swing = function () {
     var swing = get_whole_array("swing:swing");
     var is_obj_empty = is_empty(swing);
-    if (is_empty) {
+    // if there is no swing, create a default swing
+    if (is_obj_empty) {
 	var no_of_notes = parseInt(get_value("timing:beats_to_the_bar"), 10);
 	for (var i = 0; i < no_of_notes; i++) {
 	    var beatname = "beat" + (i + 1);
@@ -110,8 +134,6 @@ var render_swing = function () {
 	    currentsong.arraySet(0, "swing", beatname, "swing");
 	    currentsong.arraySet(0, "swing", beatname, "emphasis");
 	};
-    } else {
-	console.log("got swing");
     };
 };
 
@@ -123,15 +145,20 @@ var maybe_compile = function () {
 };
 
 var is_type_valid = function(val, type) {
+    var obj = new Object();
     if (type === "number") {
 	if (parseInt(val, 10)) {
-	    return true
+	    obj.is_valid = true;
+	    obj.val = parseInt(val, 10);
 	} else {
-	    return false
+	    obj.is_valid = false;
+	    obj.val = val;
 	};
     } else {
-	return true;
+	    obj.is_valid = true;
+	    obj.val = val;
     }
+    return obj;
 };
 
 var get_fieldname = function(classname) {
@@ -142,11 +169,12 @@ var get_fieldname = function(classname) {
 var on_change = function (e) {
     var val = $(e.target).val();
     var type = $(e.target).attr("data-type");
-    if (is_type_valid(val, type)) {
+    var returnval = is_type_valid(val, type);
+    if (returnval.is_valid) {
 	var route = $(e.target).attr("data-route");
 	$(".brill-error-msg").removeClass("visible");
 	$(".brill-error-msg").addClass("hidden");
-	update_data(val, route);
+	update_data(returnval.val, route);
     } else {
 	var fieldname = get_fieldname($(e.target).attr("class"));
 	var msg = "Field " + fieldname + " has value " + val +
@@ -181,29 +209,12 @@ $('.tabular.menu .item').tab();
 // handle menu updates
 //
 var enable_menu = function (id) {
-    console.log("about to send an aync message");
     var payload = new Object();
     payload.type = "enable menu";
     payload.menu_id = id;
-    console.log(payload);
     ipcRenderer.send('asynchronous-message', payload);
 };
 
-// bind data fields to update the song
-$("input[data-route]").change(on_change);
-
-$("input[data-settings").change(function (e) {
-    var type = $(e.target).attr("data-type");
-    var val;
-    if (type === "boolean") {
-	val = $(e.target).is(":checked");
-    } else {
-	val = $(e.target).val();
-    };
-    var setting = $(e.target).attr("data-settings");
-
-    settings.set(setting, val);
-});
 
 //
 // functions to handle interprocess communications
@@ -221,6 +232,8 @@ ipcRenderer.on('new', function(ev, data) {
 		currentsong = song.open(selectedsong, writers);
 		console.log(currentsong);
 		enable_menu("brill-menu-title");
+		enable_menu("brill-menu-timing");
+		enable_menu("brill-menu-instruments");
 		render();
 		$('.ui.modal.brillopen').modal('hide');
 	    });
@@ -238,6 +251,8 @@ ipcRenderer.on('open', function(ev, data) {
 	    var writers = get_songwriters_from_settings();
 	    currentsong = song.open(fileName[0], writers);
 	    enable_menu("brill-menu-title");
+	    enable_menu("brill-menu-timing");
+	    enable_menu("brill-menu-instruments");
 	    render();
 	    $('.ui.modal.brillopen').modal('hide');
 	}
@@ -249,27 +264,27 @@ ipcRenderer.on('open', function(ev, data) {
 });
 
 ipcRenderer.on('settings', function(ev, data) {
-    console.log("in settings");
+    $("#brill-main").load('./settings.html', function () {init_settings();});
 });
 
 ipcRenderer.on('title', function(ev, data) {
-    $("#brill-main").load('./title.html');
+    $("#brill-main").load('./title.html', function () {render();});
 });
 
 ipcRenderer.on('timing', function(ev, data) {
-    console.log("in timing");
+    $("#brill-main").load('./timing.html', function () {render();});
 });
 
 ipcRenderer.on('instruments', function(ev, data) {
-    console.log("in instruments");
+    $("#brill-main").load('./instruments.html', function () {render();});
 });
 
 
 //
 // now run init
 //
-init();
 
 currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
 enable_menu("brill-menu-title");
-render();
+enable_menu("brill-menu-timing");
+enable_menu("brill-menu-instruments");
