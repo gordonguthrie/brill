@@ -9,6 +9,7 @@ const fs = require('fs');
 const song = require('brill-song');
 const settings = require('electron-settings');
 const ipcRenderer = require('electron').ipcRenderer;
+const swingRenderer = require('./swing.js');
 
 // global variables
 var currentsong;
@@ -36,6 +37,8 @@ var init_settings = function () {
     } else {
 	$("#brill-compile-setting").prop('checked', true);
     };
+    // lastly render
+    render();
 };
 
 var is_empty = function (obj) {
@@ -90,11 +93,33 @@ var render = function() {
     read_data_and_render();
     bind_fields_for_update();
     // progressively show stuff that has prerequisites to work
-    if ($(".brill-beats_to_the_bar").val() !== "") {
+    if ($(".brill-beats_to_the_bar").val() !== undefined) {
+	console.log("got beats to the bar");
+	console.log($(".brill-beats_to_the_bar"));
 	$("[data-hidden='beats_to_the_bar']").transition('fade');
 	render_swing();
     };
 };
+
+var render_swing = function () {
+    console.log("in render swing");
+    var swing = get_whole_array("timing:swing");
+    var is_obj_empty = is_empty(swing);
+    // if there is no swing, create a default swing
+    var beats_to_bar = parseInt(get_value("timing:beats_to_the_bar"), 10);
+    if (is_obj_empty) {
+	for (var i = 0; i < beats_to_bar; i++) {
+	    var beatname = "beat" + (i + 1);
+	    currentsong.arraySet("timing", "swing", beatname, 0);
+	    currentsong.arraySet("timing", "emphasis", beatname, 0);
+	};
+	// read swing back
+	swing = get_whole_array("timing:swing");
+	console.log("got swing of " + swing);
+    };
+    swingRenderer.draw_swing_control(beats_to_bar, swing);
+};
+
 
 var read_data_and_render = function () {
     var values = $("input[data-route]");
@@ -117,34 +142,18 @@ var bind_fields_for_update = function () {
 	    val = $(e.target).val();
 	};
 	var setting = $(e.target).attr("data-settings");
-
 	settings.set(setting, val);
     });
 };
 
-var render_swing = function () {
-    var swing = get_whole_array("swing:swing");
-    var is_obj_empty = is_empty(swing);
-    // if there is no swing, create a default swing
-    if (is_obj_empty) {
-	var no_of_notes = parseInt(get_value("timing:beats_to_the_bar"), 10);
-	for (var i = 0; i < no_of_notes; i++) {
-	    var beatname = "beat" + (i + 1);
-	    currentsong.add("swing", beatname);
-	    currentsong.arraySet(0, "swing", beatname, "swing");
-	    currentsong.arraySet(0, "swing", beatname, "emphasis");
-	};
-    };
-};
-
 var maybe_compile = function () {
-    console.log("maybe compiling");
     if ($("#brill-compile-setting").is(":checked")) {
 	currentsong.compile();
     };
 };
 
 var is_type_valid = function(val, type) {
+    console.log("in is type valid");
     var obj = new Object();
     if (type === "number") {
 	if (parseInt(val, 10)) {
@@ -230,12 +239,13 @@ ipcRenderer.on('new', function(ev, data) {
 		}
 		var writers = get_songwriters_from_settings();
 		currentsong = song.open(selectedsong, writers);
-		console.log(currentsong);
 		enable_menu("brill-menu-title");
 		enable_menu("brill-menu-timing");
 		enable_menu("brill-menu-instruments");
 		render();
 		$('.ui.modal.brillopen').modal('hide');
+		// pop the song
+		$("#brill-main").load('./title.html', function () {render();});
 	    });
 	}
     };
@@ -255,6 +265,8 @@ ipcRenderer.on('open', function(ev, data) {
 	    enable_menu("brill-menu-instruments");
 	    render();
 	    $('.ui.modal.brillopen').modal('hide');
+	    // pop the song
+	    $("#brill-main").load('./title.html', function () {render();});
 	}
     };
     var songs_dir = get_songs_dir_from_settings();
@@ -284,7 +296,7 @@ ipcRenderer.on('instruments', function(ev, data) {
 // now run init
 //
 
-currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
-enable_menu("brill-menu-title");
-enable_menu("brill-menu-timing");
-enable_menu("brill-menu-instruments");
+//currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
+//enable_menu("brill-menu-title");
+//enable_menu("brill-menu-timing");
+//enable_menu("brill-menu-instruments");
