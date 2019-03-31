@@ -37,7 +37,6 @@ var add_swing_beats = function (swing, beats_to_bar) {
     cv = new Canvas(canvas);
     cv.init();
     cv.addShapes(shapes);
-    cv.draw();
 };
 
 // need to do this to avoid variable hoist

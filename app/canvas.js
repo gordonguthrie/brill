@@ -8,8 +8,16 @@ exports.make = function () {
 	    this.canvas = canvas;
 	    this.ctx = ctx;
 	    this.shapes = [];
+
+	    // parameters for dragging things
 	    this.dragoffx = 0;
 	    this.dragoffy = 0;
+	    this.dragging = false;
+	    this.selection = null;
+
+	    // the redraw interval
+	    this.redrawinterval = 30;
+	    this.dirtyfordrawing = true;
 
 	    // get some layout stuff
 	    var stylePaddingLeft, stylePaddingTop
@@ -32,22 +40,32 @@ exports.make = function () {
 		adj.styleBorderLeft  = getComputedStyle('borderLeftWidth');
 		adj.styleBorderTop   = getComputedStyle('borderTopWidth');
 	    }
-	    // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
+	    // Some pages have fixed-position bars (like the stumbleupon bar)
+	    // at the top or left of the page
 	    // They will mess up mouse coordinates and this fixes that
 	    var html = document.body.parentNode;
 	    adj.htmlTop  = html.offsetTop;
 	    adj.htmlLeft = html.offsetLeft;
+
+	    // wrap them in a object to make function calls clearer
 	    this.adjustments = adj;
+
 	};
 
 	init() {
 
-	    var canv = this.canvas;
-	    var adj = this.adjustments;
-	    var shps = this.shapes;
+	    // get some variables that point to this for use
+	    // in closures
+	    var canv    = this.canvas;
+	    var context = this.ctx
+	    var adj     = this.adjustments;
+	    var shps    = this.shapes;
+	    var d4d     = this.dirtyfordrawing
+	    var sel     = this.selection;
 
-	    console.log("in init");
-	    console.log(this.canvas);
+	    //
+	    // set up the events
+	    //
 
 	    this.canvas.addEventListener('selectstart', function (e) {
 		e.preventDefault(); return false;
@@ -58,27 +76,62 @@ exports.make = function () {
 		var mx = mouse.x;
 		var my = mouse.y;
 		for (var i = shps.length - 1; i >= 0; i--) {
-		    console.log("mx is " + mx + " and my is " + my);
 		    if (shps[i].contains(mx, my)) {
+			sel = shps[i];
+			canv.dragoffx = mx - sel.x;
+			canv.dragoffy = my - sel.y;
+			canv.dragging = true;
+			canv.selection = sel;
+			d4d = true;
 			console.log("clicked in shape " + i);
-		    } else {
-			console.log("didn't click in a shape");
 		    };
 		};
-	    });
+	    }, true);
+
+	    this.canvas.addEventListener('mousemove', function (e) {
+		if (canv.dragging) {
+		    console.log("in dragging");
+		    var mouse = getMouse(canv, adj, e);
+		    console.log(mouse);
+		    canv.selection.x = mouse.x - canv.dragoffx;
+		    canv.selection.y = mouse.y - canv.dragoffy;
+		    console.log(canv.selection);
+		    console.log(sel);
+		    console.log(shps);
+		    d4d = true;
+		};
+	    }, false);
+
+	    this.canvas.addEventListener('mouseup', function (e) {
+		console.log("in mouseup");
+		canv.dragging = false;
+		d4d = true;
+	    }, true);
+
+	    // we redraw based on an interval
+	    var draw = function () {
+	//	console.log("in draw");
+	//	console.log(d4d);
+		if (d4d) {
+		    for (var i = 0; i < shps.length; i++) {
+			console.log(shps[i]);
+			shps[i].drawShape(context);
+		    };
+		    d4d = false;
+		};
+	    };
+
+	    setInterval(function () {draw();}, this.redrawinterval);
+
 	};
 
 	addShapes(newshapes) {
 	    for (var i = 0; i < newshapes.length; i++) {
 		this.shapes.push(newshapes[i]);
 	    };
+	    this.dirtyfordrawing = true;
 	};
 
-	draw() {
-	    for (var i = 0; i < this.shapes.length; i++) {
-		this.shapes[i].drawShape(this.ctx);
-	    };
-	};
     };
 };
 
@@ -89,12 +142,6 @@ var getMouse = function (canvas, adj, e) {
     var offsetX = 0;
     var offsetY = 0;
     var mx, my;
-
-    console.log(canvas);
-    console.log(adj);
-    console.log(e);
-
-    console.log("element is " + element);
 
     // Compute the total offset
     if (element.offsetParent !== undefined) {
