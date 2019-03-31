@@ -28,15 +28,14 @@ var on_swing_move = function (event) {
 var add_swing_beats = function (swing, beats_to_bar) {
     // first add the beats
     var canvas = document.getElementById("brill-swing-canvas");
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = "#AA0000";
     var shapes = [];
     var key, i, cv;
     for (i = 0; i < swing.length; i++) {
 	key = Object.keys(swing[i])[0];
 	make_beat(shapes, i, beats_to_bar, swing[i][key]);
     };
-    cv = new Canvas(ctx);
+    cv = new Canvas(canvas);
+    cv.init();
     cv.addShapes(shapes);
     cv.draw();
 };
