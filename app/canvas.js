@@ -6,6 +6,8 @@ exports.make = function () {
 	    ctx.fillStyle = "#AA0000";
 
 	    this.canvas = canvas;
+	    this.width = $(canvas).width();
+	    this.height = $(canvas).height();
 	    this.ctx = ctx;
 	    this.shapes = [];
 
@@ -62,6 +64,8 @@ exports.make = function () {
 	    var shps    = this.shapes;
 	    var d4d     = this.dirtyfordrawing
 	    var sel     = this.selection;
+	    var width   = this.width;
+	    var height  = this.height;
 
 	    //
 	    // set up the events
@@ -76,46 +80,41 @@ exports.make = function () {
 		var mx = mouse.x;
 		var my = mouse.y;
 		for (var i = shps.length - 1; i >= 0; i--) {
-		    if (shps[i].contains(mx, my)) {
+		    if (shps[i].contains(mx/width, my/height)) {
 			sel = shps[i];
 			canv.dragoffx = mx - sel.x;
 			canv.dragoffy = my - sel.y;
 			canv.dragging = true;
+			sel.onMove(sel);
 			canv.selection = sel;
 			d4d = true;
-			console.log("clicked in shape " + i);
 		    };
 		};
 	    }, true);
 
 	    this.canvas.addEventListener('mousemove', function (e) {
 		if (canv.dragging) {
-		    console.log("in dragging");
 		    var mouse = getMouse(canv, adj, e);
-		    console.log(mouse);
 		    canv.selection.x = mouse.x - canv.dragoffx;
 		    canv.selection.y = mouse.y - canv.dragoffy;
-		    console.log(canv.selection);
-		    console.log(sel);
-		    console.log(shps);
 		    d4d = true;
 		};
 	    }, false);
 
 	    this.canvas.addEventListener('mouseup', function (e) {
-		console.log("in mouseup");
 		canv.dragging = false;
 		d4d = true;
 	    }, true);
 
-	    // we redraw based on an interval
+	    // we redraw based on an ticking time interval
 	    var draw = function () {
-	//	console.log("in draw");
-	//	console.log(d4d);
+		// first clear it all
 		if (d4d) {
+		    context.clearRect(0, 0, canv.width, canv.height);
 		    for (var i = 0; i < shps.length; i++) {
-			console.log(shps[i]);
-			shps[i].drawShape(context);
+//			console.log("about to draw shape with context");
+//			console.log("width is " + width + " height is " + height);
+			shps[i].drawShape(context, width, height);
 		    };
 		    d4d = false;
 		};
@@ -159,6 +158,6 @@ var getMouse = function (canvas, adj, e) {
     mx = e.pageX - offsetX;
     my = e.pageY - offsetY;
 
-    // We return a simple javascript object (a hash) with x and y defined
+   // We return a simple javascript object (a hash) with x and y defined
     return {x: mx, y: my};
 }

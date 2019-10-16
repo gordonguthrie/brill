@@ -67,24 +67,46 @@ var get_songs_dir_from_settings = function () {
     }
 };
 
+var wrap = function(type, route, value) {
+    updateFn = function (newval) {
+	console.log("in updateFn newval is:")
+	console.log(newval);
+	console.log("...and route is " + route);
+	update_data(type, newval, route)
+    };
+    obj = {};
+    obj.update_fn = updateFn;
+    obj.value = value;
+    return obj;
+};
+
 var get_array_value = function(route) {
     var routes = route.split(":");
-    return currentsong.arrayGet(routes[0], routes[1], routes[2]);
+    return wrap("array", route, currentsong.arrayGet(routes[0], routes[1], routes[2]));
 };
 
 var get_value = function(route) {
     var routes = route.split(":");
-    return currentsong.get(routes[0], routes[1]);
+    return wrap("object", route, currentsong.get(routes[0], routes[1]));
 };
 
 var get_whole_array = function(route) {
     var routes = route.split(":");
-    return currentsong.getWholeArray(routes[0], routes[1]);
+    var vals = currentsong.getWholeArray(routes[0], routes[1]);
+    var wrapped_vals = [];
+    for (i = 0; i < vals.length; i++) {
+	wrapped_vals.push(wrap("array", route + ":" + Object.keys(vals[i])[0], vals[i]));
+    };
+    return wrapped_vals;
 };
 
-var update_data = function(val, route) {
+var update_data = function(type, val, route) {
     var routes = route.split(":");
-    currentsong.set(val, routes[0], routes[1]);
+    if (type == "object") {
+	currentsong.set(val, routes[0], routes[1]);
+    } else if (type == "array") {
+	currentsong.arraySet(val, routes[0], routes[1]);
+    }
     maybe_compile();
     render();
 };
@@ -94,29 +116,27 @@ var render = function() {
     bind_fields_for_update();
     // progressively show stuff that has prerequisites to work
     if ($(".brill-beats_to_the_bar").val() !== undefined) {
-	console.log("got beats to the bar");
-	console.log($(".brill-beats_to_the_bar"));
 	$("[data-hidden='beats_to_the_bar']").transition('fade');
 	render_swing();
     };
 };
 
 var render_swing = function () {
-    console.log("in render swing");
     var swing = get_whole_array("timing:swing");
     var is_obj_empty = is_empty(swing);
     // if there is no swing, create a default swing
-    var beats_to_bar = parseInt(get_value("timing:beats_to_the_bar"), 10);
+    var beats_to_bar = parseInt(get_value("timing:beats_to_the_bar").value, 10);
     if (is_obj_empty) {
 	for (var i = 0; i < beats_to_bar; i++) {
 	    var beatname = "beat" + (i + 1);
-	    currentsong.arraySet("timing", "swing", beatname, 0);
+	    currentsong.arraySet("timing", "swing", beatname, i);
 	    currentsong.arraySet("timing", "emphasis", beatname, 0);
 	};
 	// read swing back
 	swing = get_whole_array("timing:swing");
-	console.log("got swing of " + swing);
     };
+    console.log("about to render a swing");
+    console.log(swing);
     swingRenderer.draw_swing_control(beats_to_bar, swing);
 };
 
@@ -125,7 +145,7 @@ var read_data_and_render = function () {
     var values = $("input[data-route]");
     values.each(function (d) {
 	var route = $(values[d]).attr("data-route");
-	$(values[d]).val(get_value(route));
+	$(values[d]).val(get_value(route).value);
     });
 };
 
@@ -153,7 +173,6 @@ var maybe_compile = function () {
 };
 
 var is_type_valid = function(val, type) {
-    console.log("in is type valid");
     var obj = new Object();
     if (type === "number") {
 	if (parseInt(val, 10)) {
@@ -296,7 +315,8 @@ ipcRenderer.on('instruments', function(ev, data) {
 // now run init
 //
 
-//currentsong = song.open("/home/vagrant/Songs/Evie", "Gordo");
+currentsong = song.open("/home/vagrant/Songs/Frankie", "Gordo");
+$("#brill-main").load('./timing.html', function () {render();});
 //enable_menu("brill-menu-title");
 //enable_menu("brill-menu-timing");
 //enable_menu("brill-menu-instruments");
