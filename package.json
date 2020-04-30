@@ -21,7 +21,7 @@
         "brill-song": "^1.0.0",
         "electron-settings": "^3.2.0",
         "gulp": "^3.9.1",
-        "jquery": "^3.3.1",
+        "jquery": "^3.5.0",
         "popper": "^1.0.1",
         "semantic-ui": "^2.4.2"
     }
